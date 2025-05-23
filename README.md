@@ -45,7 +45,7 @@ tbh i have no idea. But from what ChatGPT told me:
 - It looks for `![[image.png]]` links in your `.md` files.
 - Then tries to find those images in the root of your vault.
 - If it finds one, it moves it into an `assets/` folder next to the markdown file.
-- It does this for every `.md` file it can find - including subfolders.
+- It does this for every `.md` file it can find — including subfolders.
 
 ## 🛠️ How to run
 
@@ -53,24 +53,19 @@ tbh i have no idea. But from what ChatGPT told me:
 
 1. **Clone the repo:**
 
-- `git clone https://github.com/your-username/your-repo-name.git`
+```bash
+git clone https://github.com/CuzImAzizx/obsidian-image-organizer
+cd obsidian-image-organizer/
+```
+2. **Run the script with your vault's path as an argument:**
+```bash
+node script.js "C:\Users\YourUsername\path\to\ObsidianVault"
+```
+_Alternatively, you can set the `basePath` variable in `script.js`:_
 
-- `cd your-repo-name`
+_Note: If no path is passed, the script uses `basePath`._
+```js
+const basePath = "/path/to/ObsidianVault/";`
+```
 
-2. **Set the vault path:**
-
-- Option 1: Edit the `basePath` variable in `script.js`.
-
-- `const basePath = "your new path";`
-
-- Option 2: Pass the path as a command-line argument:
-
-  ```
-  node script.js "C:\Users\YourUsername\path\to\ObsidianVault"
-  ```
-
-- Note: if no path is passed, the script uses a default path.
-
-3. **Run the script:**
-
-4. **Save the output** — it might help if something breaks or goes missing.
+3. **Save the output** — it might help if something breaks or goes missing.

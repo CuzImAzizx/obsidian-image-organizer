@@ -6,11 +6,32 @@ const path = require("path");
 
 const cmdPath = process.argv[2];
 const basePath = "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
+// Note: In Windows, each backslash should be escaped (\\) or use forward slashes (/) instead
 const vaultPath = cmdPath ? cmdPath : basePath;
 
-// Note: In Windows, each backslash should be escaped (\\) or use forward slashes (/) instead
 
 // === HELPER FUNCTIONS ===
+
+function checkValidVaultPath(vaultPath){
+  // Check if path did provided
+  if(vaultPath == "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\"){
+    console.error("Error: No path was provided. Please provide a valid path as an argument");
+    process.exit(1)
+  }
+
+  // Check if path exists
+  if (!fs.existsSync(vaultPath)) {
+    console.error("Error: The specified path does not exist.");
+    process.exit(1);
+  }
+
+  // Check if it's an actual Obsidian vault
+  const obsidianFolder = path.join(vaultPath, '.obsidian');
+  if (!fs.existsSync(obsidianFolder)) {
+    console.error("Error: The specified path is not a valid Obsidian vault. '.obsidian' folder not found.");
+    process.exit(1);
+  }
+}
 
 // Recursively find all `.md` files in the given directory
 function findMarkdownFiles(dir) {
@@ -70,6 +91,7 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
 
 // === MAIN LOGIC ===
 
+checkValidVaultPath(vaultPath);
 const markdownFiles = findMarkdownFiles(vaultPath);
 console.log(`Found ${markdownFiles.length} markdown files.`);
 
