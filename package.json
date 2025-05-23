@@ -1,0 +1,12 @@
+{
+  "name": "obsidian-image-organizer",
+  "version": "1.0.0",
+  "description": "This vibe-coded script will organize your Obsidian vault. Instead of having every pasted image dumped in the root directory, they’ll be moved into an `assets/` folder next to the note that references them.",
+  "main": "script.js",
+  "scripts": {
+    "start:": "node script.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
