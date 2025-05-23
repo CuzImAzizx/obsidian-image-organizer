@@ -3,7 +3,10 @@ const path = require("path");
 
 // === CONFIGURATION ===
 // Set this to the root directory where the Obsidian vault or a subfolder resides
-const basePath = process.argv[2] || "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
+
+const cmdPath = process.argv[2];
+const basePath = "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
+const vaultPath = cmdPath ? cmdPath : basePath;
 
 // Note: In Windows, each backslash should be escaped (\\) or use forward slashes (/) instead
 
@@ -67,10 +70,10 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
 
 // === MAIN LOGIC ===
 
-const markdownFiles = findMarkdownFiles(basePath);
+const markdownFiles = findMarkdownFiles(vaultPath);
 console.log(`Found ${markdownFiles.length} markdown files.`);
 
 markdownFiles.forEach(mdFile => {
   console.log(`Processing ${mdFile}...`);
-  moveImagesForMarkdownFile(mdFile, basePath);
+  moveImagesForMarkdownFile(mdFile, vaultPath);
 });

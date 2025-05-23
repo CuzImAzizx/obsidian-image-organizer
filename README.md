@@ -1,9 +1,11 @@
 # Obsidian Image Organizer
+
 This vibe-coded script will organize your Obsidian vault. Instead of having every pasted image dumped in the root directory, they’ll be moved into an `assets/` folder next to the note that references them.
 
 ## Example
 
 ### Before
+
 ```
 ObsidianVault/
 ├── diagram.png
@@ -19,6 +21,7 @@ ObsidianVault/
 Before running the script, all images are cluttered at the root of the vault.
 
 ### After
+
 ```
 ObsidianVault/
 ├── Projects/
@@ -44,16 +47,30 @@ tbh i have no idea. But from what ChatGPT told me:
 - If it finds one, it moves it into an `assets/` folder next to the markdown file.
 - It does this for every `.md` file it can find - including subfolders.
 
-## How to run
+## 🛠️ How to run
 
 ⚠️ **PLEASE make a backup before running this.** Just in case.
 
-You will be needing NodeJS to run this script.
+1. **Clone the repo:**
 
-1. Clone or download this repo.
-2. Open the script and set the `basePath` variable to your vault directory.
-3. Run it using:
-```
-node script.js
-```
-4. Save the output — it might help if something breaks or goes missing.
+- `git clone https://github.com/your-username/your-repo-name.git`
+
+- `cd your-repo-name`
+
+2. **Set the vault path:**
+
+- Option 1: Edit the `basePath` variable in `script.js`.
+
+- `const basePath = "your new path";`
+
+- Option 2: Pass the path as a command-line argument:
+
+  ```
+  node script.js "C:\Users\YourUsername\path\to\ObsidianVault"
+  ```
+
+- Note: if no path is passed, the script uses a default path.
+
+3. **Run the script:**
+
+4. **Save the output** — it might help if something breaks or goes missing.
