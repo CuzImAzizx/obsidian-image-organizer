@@ -68,4 +68,4 @@ _Note: If no path is passed, the script uses `basePath`._
 const basePath = "/path/to/ObsidianVault/";`
 ```
 
-3. **Save the output** — it might help if something breaks or goes missing.
+3. **Check the log file** — all operations and errors are logged with timestamps in your vault under `.logs/obsidian-image-organizer-logs.log`. This can help if something breaks or goes missing.
