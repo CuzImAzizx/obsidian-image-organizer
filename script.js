@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 // === CONFIGURATION ===
-const cmdPath = process.argv[2];
+const cmdPath = process.argv[2]; // It's not always passed as first argument, gotta fix it later.
 const basePath = "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
 const vaultPath = cmdPath ? cmdPath : basePath;
 
@@ -33,15 +33,28 @@ function log(message) {
 // === HELPER FUNCTIONS ===
 
 function checkValidVaultPath(vaultPath) {
+  let skipVaultChecking = false;
+  process.argv.forEach(arg => {
+    if (arg === '--skip-vault-checking') {
+      skipVaultChecking = true;
+      log(`Skipping vault checking`);
+    }
+  });
+  if (skipVaultChecking) {
+    return;
+  }
+
   if (vaultPath === "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\") {
     const msg = "Error: No path was provided. Please provide a valid path as an argument.";
     log(msg);
+    log("===== Script exited 1 =====");
     process.exit(1);
   }
 
   if (!fs.existsSync(vaultPath)) {
     const msg = "Error: The specified path does not exist.";
     log(msg);
+    log("===== Script exited 1 =====");
     process.exit(1);
   }
 
@@ -49,6 +62,7 @@ function checkValidVaultPath(vaultPath) {
   if (!fs.existsSync(obsidianFolder)) {
     const msg = "Error: The specified path is not a valid Obsidian vault. '.obsidian' folder not found.";
     log(msg);
+    log("===== Script exited 1 =====");
     process.exit(1);
   }
 
