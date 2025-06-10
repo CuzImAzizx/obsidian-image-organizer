@@ -118,7 +118,9 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
         log(`Error moving ${imagePath}: ${e.message}`);
       }
     } else {
-      log(`Image not found in vault root: ${imageName}`);
+      if(!skipNotFound){
+        log(`Image not found in vault root: ${imageName}`);
+      }
     }
   });
 }
@@ -129,11 +131,30 @@ log("===== Script started =====");
 
 checkValidVaultPath(vaultPath);
 
+let skipNotFound = false;
+process.argv.forEach(arg => {
+  if (arg === '--skip-not-found') {
+    skipNotFound = true;
+    log(`Hiding "Image not found" messages from the log`);
+  }
+});
+
+let onlyActions = false;
+process.argv.forEach(arg => {
+  if (arg === '--only-actions') {
+    onlyActions = true;
+    log(`Displaying only actions "Only actions are logged"`);
+  }
+});
+
+
 const markdownFiles = findMarkdownFiles(vaultPath);
 log(`Found ${markdownFiles.length} markdown files.`);
 
 markdownFiles.forEach(mdFile => {
-  log(`Processing markdown file: ${mdFile}`);
+  if(!onlyActions){
+    log(`Processing markdown file: ${mdFile}`);
+  }
   moveImagesForMarkdownFile(mdFile, vaultPath);
 });
 

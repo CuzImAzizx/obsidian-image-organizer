@@ -69,3 +69,22 @@ const basePath = "/path/to/ObsidianVault/";`
 ```
 
 3. **Check the log file** — all operations and errors are logged with timestamps in your vault under `.logs/obsidian-image-organizer-logs.log`. This can help if something breaks or goes missing.
+
+## ⚙️ Command Line Options
+
+Yes, I’ve actually added command-line options — mostly for my own convenience, but they might save your sanity too. Here's what you can pass when running the script:
+
+- `--skip-vault-checking`: Skips the vault validation. Useful when you're running this on a server where the `.obsidian` folder isn't synced.
+
+- `--skip-not-found`: Suppresses logs like:"`Image not found in vault root: Pasted image 20250228090638.png`". Helpful after the first run, since moved images will obviously no longer be in the vault root.
+
+- `--only-actions`: Limits logs to only show actual actions taken, like: "`Moved image...`", "`Created assets directory...`". Great for keeping your log files clean and focused on what matters.
+
+### Pro Tip: Use It with `crontab`
+
+I run this script every night at midnight on my server to auto-organize images. Here's my crontab line:
+
+```bash
+0 0 * * * node /path/to/obsidian-image-organizer/script.js "/path/to/ObsidianVault" --only-actions --skip-not-found --skip-vault-checking
+```
+Yep, I use all the options — that’s why I built them in the first place.
