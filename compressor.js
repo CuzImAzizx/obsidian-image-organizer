@@ -7,7 +7,10 @@ const cmdPath = process.argv[2]; // It's not always passed as first argument, go
 const basePath = "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
 const imagesDir = cmdPath ? cmdPath : basePath;
 
-const compressedJsonPath = "./compressed-images.json";
+//const compressedJsonPath = `${imagesDir}/compressed-images.json`;
+const compressedJsonPath = path.join(imagesDir, ".logs/compressed-images.json");
+console.log(compressedJsonPath);
+process.exit(0)
 
 let myDate = new Date()
 myDate.toISOString()
