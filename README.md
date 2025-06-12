@@ -74,7 +74,7 @@ const basePath = "/path/to/ObsidianVault/";`
 
 Yes, I’ve actually added command-line options — mostly for my own convenience, but they might save your sanity too. Here's what you can pass when running the script:
 
-- `--skip-vault-checking`: Skips the vault validation. Useful when you're running this on a server where the `.obsidian` folder isn't synced.
+- `--skip-vault-checking`: Skips the vault validation. Useful when you're running this on a server where the `.obsidian/` folder isn't synced.
 
 - `--skip-not-found`: Suppresses logs like:"`Image not found in vault root: Pasted image 20250228090638.png`". Helpful after the first run, since moved images will obviously no longer be in the vault root.
 
@@ -88,3 +88,36 @@ I run this script every night at midnight on my server to auto-organize images. 
 0 0 * * * node /path/to/obsidian-image-organizer/script.js "/path/to/ObsidianVault" --only-actions --skip-not-found --skip-vault-checking
 ```
 Yep, I use all the options — that’s why I built them in the first place.
+
+---
+
+# 🗜️ Image Compression (Optional Utility)
+
+If you want to reduce the size of your image files in the vault, I’ve also made a separate script: `compressor.js`.
+
+This script goes through your vault and compresses all `.png` images using sharp. It saves a log in `./compressed-images.json` to avoid re-compressing the same files again.
+
+## 🔧 How to Use
+Install the dependencies (It's just `sharp` and `fs-extra`)
+
+```bash
+npm i # After cloning of course
+``` 
+
+Then just run the `compressor.js` with the vault's path as an argument
+
+```bash
+node compressor.js "C:\Users\YourUsername\path\to\ObsidianVault"
+```
+_Alternatively, you can set the `basePath` variable in `compressor.js`:_
+
+_Note: If no path is passed, the script uses `basePath`._
+
+## 🧠 What It Does
+- Compresses all `.png` images in the vault (recursively).
+- Skips already compressed images using `compressed-images.json`.
+- Logs the original and new size for each image.
+
+_Note: `compressor.js` does not log anyting in `.logs/obsidian-image-organizer-logs.log`. I am in the process to do so, infact, I will combine this compression functionality with the original script under a new name (Obsidian Image Manager), perhaps not today._
+
+
