@@ -7,10 +7,43 @@ const cmdPath = process.argv[2]; // It's not always passed as first argument, go
 const basePath = "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
 const imagesDir = cmdPath ? cmdPath : basePath;
 
-//const compressedJsonPath = `${imagesDir}/compressed-images.json`;
+function checkValidVaultPath(vaultPath) {
+  let skipVaultChecking = false;
+  process.argv.forEach(arg => {
+    if (arg === '--skip-vault-checking') {
+      skipVaultChecking = true;
+      log(`Skipping vault checking`);
+    }
+  });
+  if (skipVaultChecking) {
+    return;
+  }
+
+  if (vaultPath === "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\") {
+    const msg = "Error: No path was provided. Please provide a valid path as an argument.";
+    console.error(msg)
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(vaultPath)) {
+    const msg = "Error: The specified path does not exist.";
+    console.error(msg)
+    process.exit(1);
+  }
+
+  const obsidianFolder = path.join(vaultPath, ".obsidian");
+  if (!fs.existsSync(obsidianFolder)) {
+    const msg = "Error: The specified path is not a valid Obsidian vault. '.obsidian' folder not found.";
+    console.error(msg)
+    process.exit(1);
+  }
+
+  log(`Vault path validated: ${vaultPath}`);
+}
+
+checkValidVaultPath(imagesDir)
+
 const compressedJsonPath = path.join(imagesDir, ".logs/compressed-images.json");
-console.log(compressedJsonPath);
-process.exit(0)
 
 let myDate = new Date()
 myDate.toISOString()
