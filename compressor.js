@@ -8,16 +8,16 @@ const basePath = "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\";
 const imagesDir = cmdPath ? cmdPath : basePath;
 
 function checkValidVaultPath(vaultPath) {
-  let skipVaultChecking = false;
-  process.argv.forEach(arg => {
-    if (arg === '--skip-vault-checking') {
-      skipVaultChecking = true;
-      log(`Skipping vault checking`);
-    }
-  });
-  if (skipVaultChecking) {
-    return;
-  }
+  //let skipVaultChecking = false;
+  //process.argv.forEach(arg => {
+    //if (arg === '--skip-vault-checking') {
+    //  skipVaultChecking = true;
+    //  log(`Skipping vault checking`);
+    //}
+  //});
+  //if (skipVaultChecking) {
+  //  return;
+  //}
 
   if (vaultPath === "C:\\Users\\YourUsername\\path\\to\\ObsidianVault\\") {
     const msg = "Error: No path was provided. Please provide a valid path as an argument.";
