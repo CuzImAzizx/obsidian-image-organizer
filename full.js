@@ -175,8 +175,8 @@ function extractImagesFromMarkdown(content) {
 }
 
 function hashFile(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
-  return crypto.createHash("sha256").update(fileBuffer).digest("hex");
+    const fileBuffer = fs.readFileSync(filePath);
+    return crypto.createHash("sha256").update(fileBuffer).digest("hex");
 }
 
 function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
@@ -201,11 +201,13 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
                 fs.renameSync(imagePath, targetPath);
                 // Log the movement
                 let movedImages = JSON.parse(fs.readFileSync(movedJsonPath, 'utf-8'));
+                const moveDate = new Date().toISOString();
                 const data = {
                     //hash: hashFile(targetPath),
                     name: path.basename(targetPath),
                     previousLocation: imagePath,
-                    newLocation: targetPath
+                    newLocation: targetPath,
+                    moveDate: moveDate
                 }
                 movedImages.push(data)
                 fs.writeFileSync(movedJsonPath, JSON.stringify(movedImages, null, 2));
@@ -227,6 +229,31 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
             }
         }
     });
+}
+
+
+function getAllPngFiles(dir) {
+    let files = [];
+
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+        const fullPath = path.join(dir, item.name);
+        if (item.isDirectory()) {
+            files = files.concat(getAllPngFiles(fullPath));
+        } else if (item.isFile() && path.extname(item.name).toLowerCase() === ".png") {
+            files.push(fullPath);
+        }
+    }
+
+    return files;
+}
+
+function generateCopyName(filePath) {
+    const dir = path.dirname(filePath);
+    const ext = path.extname(filePath);
+    const name = path.basename(filePath, ext);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    return path.join(dir, `${name}_copy_${timestamp}${ext}`);
 }
 
 
@@ -255,7 +282,63 @@ if (moveImagesToAssets) {
 }
 
 if (compressImages) {
-    log("Start compressing images")
+    log("Start compressing images");
+
+
+    (async () => {
+        const pngFiles = getAllPngFiles(vaultPath);
+        const logPath = path.join(vaultPath, ".logs/");
+        const compressedJsonPath = path.join(logPath, "compressed-images.json");
+
+
+        for (const filePath of pngFiles) {
+            let compressedImagesList = JSON.parse(fs.readFileSync(compressedJsonPath));
+            if (compressedImagesList.some(image => image.imagePath === filePath) || compressedImagesList.some(image => image.compressedImageHash === hashFile(filePath))) { // I want to only use the hash, but I ran the script before adding this functionality and now I have only the compressed image names
+                if(!onlyActions){
+                    log(`Skipping already compressed: ${filePath}`)
+                }
+                continue;
+            }
+
+            try {
+                if(!onlyActions){
+                    log(`Processing: ${filePath}`)
+                }
+
+                // 1. Copy the original image
+                const copyPath = generateCopyName(filePath);
+                fs.copyFileSync(filePath, copyPath); // Using fs to copy the file
+
+                // 2. Compress and overwrite original
+                await sharp(copyPath)
+                    .png({ quality: 75, compressionLevel: 9 })
+                    .toFile(filePath);
+
+                const compressionDate = new Date().toISOString();
+
+                // 3. Get information
+                const data = {
+                    imagePath: filePath,
+                    compressedImageHash: hashFile(filePath),
+                    oldSize: fs.statSync(copyPath).size,
+                    newSize: fs.statSync(filePath).size,
+                    compressionDate: compressionDate
+                };
+
+                // 4. Delete the copy
+                fs.unlinkSync(copyPath);
+
+                // 5. Update the compressed list
+                compressedImagesList.push(data);
+                fs.writeFileSync(compressedJsonPath, JSON.stringify(compressedImagesList, null, 2));
+
+                log(`Compressed and updated: ${filePath}`)
+            } catch (err) {
+                console.error(`Error processing ${filePath}:`, err);
+            }
+        }
+    })();
+
 }
 
 
@@ -271,7 +354,5 @@ log("===== Script finished =====");
 
 // Later, additional features
 // Load the compressed images json
-const logPath = path.join(vaultPath, ".logs/");
-const compressedJsonPath = path.join(logPath, "compressed-images.json");
-//let compressedImagesList = JSON.parse(fs.readFileSync(compressedJsonPath));
+
 

@@ -96,7 +96,7 @@ function generateCopyName(filePath) {
 
       // 1. Copy the original image
       const copyPath = generateCopyName(filePath);
-      await fse.copy(filePath, copyPath);
+      fs.copyFileSync(filePath, copyPath); // Using fs to copy the file
 
       // 2. Compress and overwrite original
       await sharp(copyPath)
@@ -114,7 +114,7 @@ function generateCopyName(filePath) {
       };
       
       // 4. Delete the copy
-      fs.rmSync(copyPath)
+      fs.unlinkSync(copyPath); // Using fs to delete the file
 
       // 5. Update the compressed list
       compressedImages.push(data);
