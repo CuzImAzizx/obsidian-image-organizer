@@ -38,7 +38,7 @@ function checkValidVaultPath(vaultPath) {
     process.exit(1);
   }
 
-  log(`Vault path validated: ${vaultPath}`);
+  //log(`Vault path validated: ${vaultPath}`);
 }
 
 checkValidVaultPath(imagesDir)
