@@ -1,8 +1,13 @@
-# Obsidian Image Organizer
 
-This vibe-coded script will organize your Obsidian vault. Instead of having every pasted image dumped in the root directory, they’ll be moved into an `assets/` folder next to the note that references them.
+# 🖼️ Obsidian Image Organizer
 
-## Example
+This vibe-coded script will **organize** your Obsidian vault. Instead of having every pasted image dumped in the root directory, it will be moved into an `assets/` folder next to the note that references it.
+
+It will also **compress** all PNG images (optional) to save space! Since they are all screenshots, why would you keep the full resolution?
+
+---
+
+## 📁 Example
 
 ### Before
 
@@ -17,8 +22,6 @@ ObsidianVault/
 ├── Notes/
 │   └── daily-log.md              ← contains ![[screenshot.jpg]]
 ```
-
-Before running the script, all images are cluttered at the root of the vault.
 
 ### After
 
@@ -36,88 +39,82 @@ ObsidianVault/
 │       └── screenshot.jpg
 ```
 
-Now your images are organized into `assets/` directories for each note. This will allow you to share the notes too!
+---
 
-## How does it work
+## ⚙️ How it works
 
-tbh i have no idea. But from what ChatGPT told me:
-
-- It looks for `![[image.png]]` links in your `.md` files.
-- Then tries to find those images in the root of your vault.
-- If it finds one, it moves it into an `assets/` folder next to the markdown file.
-- It does this for every `.md` file it can find — including subfolders.
-
-## 🛠️ How to run
-
-⚠️ **PLEASE make a backup before running this.** Just in case.
-
-1. **Clone the repo:**
-
-```bash
-git clone https://github.com/CuzImAzizx/obsidian-image-organizer
-cd obsidian-image-organizer/
-```
-2. **Run the script with your vault's path as an argument:**
-```bash
-node script.js "C:\Users\YourUsername\path\to\ObsidianVault"
-```
-_Alternatively, you can set the `basePath` variable in `script.js`:_
-
-_Note: If no path is passed, the script uses `basePath`._
-```js
-const basePath = "/path/to/ObsidianVault/";`
-```
-
-3. **Check the log file** — all operations and errors are logged with timestamps in your vault under `.logs/obsidian-image-organizer-logs.log`. This can help if something breaks or goes missing.
-
-## ⚙️ Command Line Options
-
-Yes, I’ve actually added command-line options — mostly for my own convenience, but they might save your sanity too. Here's what you can pass when running the script:
-
-- `--skip-vault-checking`: Skips the vault validation. Useful when you're running this on a server where the `.obsidian/` folder isn't synced.
-
-- `--skip-not-found`: Suppresses logs like:"`Image not found in vault root: Pasted image 20250228090638.png`". Helpful after the first run, since moved images will obviously no longer be in the vault root.
-
-- `--only-actions`: Limits logs to only show actual actions taken, like: "`Moved image...`", "`Created assets directory...`". Great for keeping your log files clean and focused on what matters.
-
-### Pro Tip: Use It with `crontab`
-
-I run this script every night at midnight on my server to auto-organize images. Here's my crontab line:
-
-```bash
-0 0 * * * node /path/to/obsidian-image-organizer/script.js "/path/to/ObsidianVault" --only-actions --skip-not-found --skip-vault-checking
-```
-Yep, I use all the options — that’s why I built them in the first place.
+- It scans all `.md` files in your vault (recursively)
+- Finds embedded image links like `![[image.png]]`
+- Moves the actual image file (if found in the root) to a local `assets/` folder next to the note
+- Creates logs of every operation in `.logs/`
+- Optionally compresses `.png` images without affecting quality
+- Skips already compressed or moved images using hashing
 
 ---
 
-# 🗜️ Image Compression (Optional Utility)
-
-If you want to reduce the size of your image files in the vault, I’ve also made a separate script: `compressor.js`.
-
-This script goes through your vault and compresses all `.png` images using sharp. It saves a log in `./compressed-images.json` to avoid re-compressing the same files again.
-
-## 🔧 How to Use
-Install the dependencies (It's just `sharp` and `fs-extra`)
+## 🛠️ Usage
 
 ```bash
-npm i # After cloning of course
-``` 
-
-Then just run the `compressor.js` with the vault's path as an argument
-
-```bash
-node compressor.js "C:\Users\YourUsername\path\to\ObsidianVault"
+node script.js [VAULT_PATH] [RUN_MODE] [OPTIONS]
 ```
-_Alternatively, you can set the `basePath` variable in `compressor.js`:_
 
-_Note: If no path is passed, the script uses `basePath`._
+### Parameters
 
-## 🧠 What It Does
-- Compresses all `.png` images in the vault (recursively).
-- Skips already compressed images using `compressed-images.json`.
-- Logs the original and new size for each image.
+| Argument | Description |
+|----------|-------------|
+| `VAULT_PATH` | Path to your Obsidian vault |
+| `RUN_MODE` | One or more: `--move-images`, `--compress-images` |
+| `OPTIONS` | Optional flags for more control |
 
-_Note: `compressor.js` does not log anyting in `.logs/obsidian-image-organizer-logs.log`. I am in the process to do so, infact, I will combine this compression functionality with the original script under a new name (Obsidian Image Manager), perhaps not today._
+---
 
+## ⚙️ Command Line Options
+
+### Run Modes _(Can be combined)_
+
+- `--move-images` – Move embedded images to `assets/` next to each note
+- `--compress-images` – Compress PNGs recursively (logs and skips already compressed ones)
+
+### Optional Flags
+
+- `--skip-vault-checking` – Skip the check for `.obsidian/` folder
+- `--skip-not-found` – Ignore warnings about missing images
+- `--only-actions` – Only log actual actions (cleaner logs)
+
+---
+
+## Example Commands
+
+```bash
+node script.js "/path/to/ObsidianVault" --move-images # To just organize the images
+node script.js "/path/to/ObsidianVault" --compress-images # To just compress the .PNGs
+node script.js "/path/to/ObsidianVault" --move-images --compress-images --only-actions --skip-not-found
+```
+
+---
+
+## 🗃️ Logs
+
+All actions and warnings are logged inside your vault:
+
+```
+ObsidianVault/.logs/
+├── obsidian-image-organizer-logs.log
+├── moved-images.json
+└── compressed-images.json
+```
+
+- `obsidian-image-organizer-logs.log`: Human-readable log of everything done
+- `moved-images.json`: All image move actions with timestamp
+- `compressed-images.json`: All compression records with size change and hash
+
+---
+
+## ⚙️ Automation
+
+You can run this script daily with `cron` to keep your vault clean:
+
+```bash
+0 0 * * * node /path/to/obsidian-image-organizer/script.js "/path/to/ObsidianVault" --move-images --compress-images --only-actions --skip-not-found --skip-vault-checking
+```
 
