@@ -202,8 +202,8 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
                 // Log the movement
                 let movedImages = JSON.parse(fs.readFileSync(movedJsonPath, 'utf-8'));
                 const data = {
-                    imageHash: hashFile(targetPath),
-                    imageName: path.basename(targetPath),
+                    //hash: hashFile(targetPath),
+                    name: path.basename(targetPath),
                     previousLocation: imagePath,
                     newLocation: targetPath
                 }
@@ -214,8 +214,15 @@ function moveImagesForMarkdownFile(mdFilePath, vaultRoot) {
                 log(`Error moving ${imagePath}: ${e.message}`);
             }
         } else {
-            // TODO: Check if the image has been moved already (using moved-images.json)
-            if (!skipNotFound) {
+            let movedImages = JSON.parse(fs.readFileSync(movedJsonPath, 'utf-8'));
+            let alreadyMoved = false;
+            for (const image of movedImages) {
+                if (image.name === imageName) {
+                    alreadyMoved = true;
+                    break;
+                }
+            }
+            if (!alreadyMoved && !skipNotFound) {
                 log(`Image not found in vault root: ${imageName}`);
             }
         }
@@ -235,7 +242,7 @@ validateVault();
 // == Main Logic ==
 
 if (moveImagesToAssets) {
-    log("Start moving images to assets")
+    log("Start moving images")
     const markdownFiles = findMarkdownFiles(vaultPath);
     log(`Found ${markdownFiles.length} markdown files.`);
 
