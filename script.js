@@ -255,6 +255,61 @@ function generateCopyName(filePath) {
     return path.join(dir, `${name}_copy_${timestamp}${ext}`);
 }
 
+async function startCompressImages() {
+    const pngFiles = getAllPngFiles(vaultPath);
+    const logPath = path.join(vaultPath, ".logs/");
+    const compressedJsonPath = path.join(logPath, "compressed-images.json");
+
+
+    for (const filePath of pngFiles) {
+        let compressedImagesList = JSON.parse(fs.readFileSync(compressedJsonPath));
+        if (compressedImagesList.some(image => image.compressedImageHash === hashFile(filePath))) {
+            //if(!onlyActions){
+            //    log(`Skipping already compressed: ${filePath}`)
+            //}
+            continue;
+        }
+
+        try {
+            if (!onlyActions) {
+                log(`Compressing: ${filePath}`)
+            }
+
+            // 1. Copy the original image
+            const copyPath = generateCopyName(filePath);
+            fs.copyFileSync(filePath, copyPath);
+
+            // 2. Compress and overwrite original
+            await sharp(copyPath)
+                .png({ quality: 75, compressionLevel: 9 })
+                .toFile(filePath); // Might corrupt the image if interrupted, still have the copy though
+
+            const compressionDate = new Date().toISOString();
+
+            // 3. Get information
+            const data = {
+                imagePath: filePath,
+                compressedImageHash: hashFile(filePath),
+                oldSize: fs.statSync(copyPath).size,
+                newSize: fs.statSync(filePath).size,
+                compressionDate: compressionDate
+            };
+
+            // 4. Delete the copy
+            fs.unlinkSync(copyPath);
+
+            // 5. Update the compressed list
+            compressedImagesList.push(data);
+            fs.writeFileSync(compressedJsonPath, JSON.stringify(compressedImagesList, null, 2));
+
+            log(`Compressed: ${filePath}`)
+        } catch (err) {
+            console.error(`Error compressing ${filePath}:`, err);
+        }
+    }
+
+}
+
 
 
 
@@ -267,76 +322,30 @@ validateVault();
 
 // == Main Logic ==
 
-if (moveImagesToAssets) {
-    log("Start moving images")
-    const markdownFiles = findMarkdownFiles(vaultPath);
-    log(`Found ${markdownFiles.length} markdown files.`);
+async function main() {
+    if (moveImagesToAssets) {
+        log("Start moving images")
+        const markdownFiles = findMarkdownFiles(vaultPath);
+        log(`Found ${markdownFiles.length} markdown files.`);
 
-    markdownFiles.forEach(mdFile => {
-        if (!onlyActions) {
-            log(`Processing markdown file: ${mdFile}`);
-        }
-        moveImagesForMarkdownFile(mdFile, vaultPath);
-    });
+        markdownFiles.forEach(mdFile => {
+            if (!onlyActions) {
+                log(`Processing markdown file: ${mdFile}`);
+            }
+            moveImagesForMarkdownFile(mdFile, vaultPath);
+        });
+    }
+
+    if (compressImages) {
+        log("Start compressing images");
+
+
+        await startCompressImages();
+
+    }
+    log("===== Script finished =====");
+
 }
 
-if (compressImages) {
-    log("Start compressing images");
+main()
 
-
-    (async () => {
-        const pngFiles = getAllPngFiles(vaultPath);
-        const logPath = path.join(vaultPath, ".logs/");
-        const compressedJsonPath = path.join(logPath, "compressed-images.json");
-
-
-        for (const filePath of pngFiles) {
-            let compressedImagesList = JSON.parse(fs.readFileSync(compressedJsonPath));
-            if (compressedImagesList.some(image => image.compressedImageHash === hashFile(filePath))) { 
-                //if(!onlyActions){
-                //    log(`Skipping already compressed: ${filePath}`)
-                //}
-                continue;
-            }
-
-            try {
-                if(!onlyActions){
-                    log(`Compressing: ${filePath}`)
-                }
-
-                // 1. Copy the original image
-                const copyPath = generateCopyName(filePath);
-                fs.copyFileSync(filePath, copyPath);
-
-                // 2. Compress and overwrite original
-                await sharp(copyPath)
-                    .png({ quality: 75, compressionLevel: 9 })
-                    .toFile(filePath); // Might corrupt the image if interrupted, still have the copy though
-
-                const compressionDate = new Date().toISOString();
-
-                // 3. Get information
-                const data = {
-                    imagePath: filePath,
-                    compressedImageHash: hashFile(filePath),
-                    oldSize: fs.statSync(copyPath).size,
-                    newSize: fs.statSync(filePath).size,
-                    compressionDate: compressionDate
-                };
-
-                // 4. Delete the copy
-                fs.unlinkSync(copyPath);
-
-                // 5. Update the compressed list
-                compressedImagesList.push(data);
-                fs.writeFileSync(compressedJsonPath, JSON.stringify(compressedImagesList, null, 2));
-
-                log(`Compressed: ${filePath}`)
-            } catch (err) {
-                console.error(`Error compressing ${filePath}:`, err);
-            }
-        }
-    })();
-
-}
-log("===== Script finished =====");
