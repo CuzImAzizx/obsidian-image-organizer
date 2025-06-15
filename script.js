@@ -260,55 +260,56 @@ async function startCompressImages() {
     const logPath = path.join(vaultPath, ".logs/");
     const compressedJsonPath = path.join(logPath, "compressed-images.json");
 
+    // Read compressed-images.json and write only once, not every iteration. Compressed images will be re-compressed again IF the script is interrupted
+    //TODO: Save progress every N images
+    let compressedImagesList = JSON.parse(fs.readFileSync(compressedJsonPath));
+
+    const compressedHashes = new Set(compressedImagesList.map(img => img.compressedImageHash));// Very cool
 
     for (const filePath of pngFiles) {
-        let compressedImagesList = JSON.parse(fs.readFileSync(compressedJsonPath));
-        if (compressedImagesList.some(image => image.compressedImageHash === hashFile(filePath))) {
-            //if(!onlyActions){
-            //    log(`Skipping already compressed: ${filePath}`)
-            //}
+        const hash = hashFile(filePath);
+        if (compressedHashes.has(hash)) {
             continue;
         }
 
         try {
-            if (!onlyActions) {
-                log(`Compressing: ${filePath}`)
-            }
+            if (!onlyActions) log(`Compressing: ${filePath}`);
 
-            // 1. Copy the original image
+            // 1. Copy original
             const copyPath = generateCopyName(filePath);
             fs.copyFileSync(filePath, copyPath);
 
-            // 2. Compress and overwrite original
+            // 2. Compress
             await sharp(copyPath)
-                .png({ quality: 75, compressionLevel: 9 })
-                .toFile(filePath); // Might corrupt the image if interrupted, still have the copy though
+                .png({ quality: 75, compressionLevel: 9 }) //TODO: Add options to control quality
+                .toFile(filePath);
 
             const compressionDate = new Date().toISOString();
-
-            // 3. Get information
             const data = {
                 imagePath: filePath,
                 compressedImageHash: hashFile(filePath),
                 oldSize: fs.statSync(copyPath).size,
                 newSize: fs.statSync(filePath).size,
-                compressionDate: compressionDate
+                compressionDate
             };
 
-            // 4. Delete the copy
+            // 3. Delete copy
             fs.unlinkSync(copyPath);
 
-            // 5. Update the compressed list
+            // 4. Add to memory list
             compressedImagesList.push(data);
-            fs.writeFileSync(compressedJsonPath, JSON.stringify(compressedImagesList, null, 2));
+            compressedHashes.add(data.compressedImageHash);
 
-            log(`Compressed: ${filePath}`)
+            log(`Compressed: ${filePath}`);
         } catch (err) {
             console.error(`Error compressing ${filePath}:`, err);
         }
     }
 
+    fs.writeFileSync(compressedJsonPath, JSON.stringify(compressedImagesList, null, 2));
+    log(`Updated ${compressedJsonPath}`)
 }
+
 
 
 
