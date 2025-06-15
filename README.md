@@ -7,6 +7,20 @@ It will also **compress** all PNG images (optional) to save space! Since they ar
 
 ---
 
+## 📌 Problem Statement
+
+I use [Obsidian](https://obsidian.md/) for note-taking, and I often paste screenshots directly into my notes (such as diagrams, UI references, and quick visuals). By default, Obsidian saves all pasted images to the **root of the vault**, which quickly becomes messy and unorganized.
+
+This causes two main issues:
+- It’s hard to **share or move a specific note** without also manually locating and bundling its pasted images.
+- The images — especially full-resolution screenshots — tend to be **unnecessarily large in size**, which bloats the vault and slows syncing.
+
+To solve this, I created this script:
+- It **automatically organizes pasted images** by moving them into an `assets/` folder placed next to each note, so every note becomes self-contained and easy to share.
+- It **automatically compresses PNG images** to reduce file size while keeping acceptable quality.
+- It **keeps track of previously compressed images** to avoid recompressing.
+- I run it daily via `crontab` to **keep my vault clean and lightweight** without manual effort.
+
 ## 📁 Example
 
 ### Before
@@ -38,6 +52,11 @@ ObsidianVault/
 │   └── assets/
 │       └── screenshot.jpg
 ```
+
+### Compression Result and a Comparison
+
+![alt text](example.png)
+
 
 ---
 
