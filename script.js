@@ -4,6 +4,15 @@ const path = require("path");
 const sharp = require("sharp");
 const crypto = require("crypto");
 
+// log the help menu
+if(process.argv.length == 2){
+    console.log(`Welcome to obsidian-image-organizer`);
+    console.log(`https://github.com/CuzImAzizx/obsidian-image-organizer`);
+    console.log(`Usage:\n\tnode script.js [VAULT_PATH] [RUN_MODE] [OPTIONS]`);
+    console.log(`\nFor more information, visit the GitHub repo`);
+    process.exit(0);
+}
+
 
 // == Global Variables ==
 const vaultPath = process.argv[2];
@@ -12,13 +21,14 @@ let skipNotFound = false;
 let onlyActions = false;
 let moveImagesToAssets = false;
 let compressImages = false;
+let printReport = false;
 
 // == Functions ==
 
 function setOptions(providedOptions) {
     providedOptions.forEach(arg => {
         if (arg.toLowerCase() == "--skip-vault-checking") {
-            skipVaultChecking = true
+            skipVaultChecking = true;
             log("Skipping vault checking");
         } else if (arg.toLowerCase() == "--skip-not-found") {
             skipNotFound = true;
@@ -30,6 +40,8 @@ function setOptions(providedOptions) {
             moveImagesToAssets = true;
         } else if (arg.toLowerCase() == "--compress-images") {
             compressImages = true;
+        } else if (arg.toLowerCase() == "--print-report"){
+            printReport = true;
         } else if (arg.startsWith("--")) {
             //wtf, it's an option provided but it's something else?
             log(`Error: Option "${arg}" unknown`);
@@ -43,6 +55,8 @@ function validateLogs() {
     // Ensure the log files exists or create it
     if (!fs.existsSync(vaultPath)) {
         console.error("Invalid vaultPath, does not exists.");
+        console.log(`Usage:\n\tnode script.js [VAULT_PATH] [RUN_MODE] [OPTIONS]`);
+        console.log(`\nFor more information, visit the GitHub repo: https://github.com/CuzImAzizx/obsidian-image-organizer`);
         process.exit(1);
     }
 
@@ -122,7 +136,7 @@ function validateVault() {
 
     const obsidianFolder = path.join(vaultPath, ".obsidian");
     if (!fs.existsSync(obsidianFolder)) {
-        const msg = "Error: The specified path is not a valid Obsidian vault. '.obsidian/' folder not found.";
+        const msg = "Error: The specified path is not a valid Obsidian vault. '.obsidian/' folder not found.\n\tCan Be skipped by adding the option --skip-vault-checking";
         log(msg);
         log("===== Script exited 1 =====");
         process.exit(1);
@@ -310,7 +324,127 @@ async function startCompressImages() {
     log(`Updated ${compressedJsonPath}`)
 }
 
+function formatBytes(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        ++i;
+    }
+    return `${bytes.toFixed(2)} ${units[i]}`;
+}
 
+function formatDate(iso) {
+    if (!iso || iso === "N/A") return "N/A";
+    const date = new Date(iso);
+    return date.toISOString().replace("T", " ").split(".")[0];
+}
+
+function getDurationMs(start, end) {
+    return new Date(end).getTime() - new Date(start).getTime();
+}
+
+function generateReport(vaultPath) {
+    const logPath = path.join(vaultPath, ".logs");
+
+    const compressedPath = path.join(logPath, "compressed-images.json");
+    const movedPath = path.join(logPath, "moved-images.json");
+    const logFilePath = path.join(logPath, "obsidian-image-organizer-logs.log");
+
+    const compressed = fs.existsSync(compressedPath)
+        ? JSON.parse(fs.readFileSync(compressedPath, "utf-8"))
+        : [];
+
+    const moved = fs.existsSync(movedPath)
+        ? JSON.parse(fs.readFileSync(movedPath, "utf-8"))
+        : [];
+
+    const logLines = fs.existsSync(logFilePath)
+        ? fs.readFileSync(logFilePath, "utf-8").split("\n").filter(Boolean)
+        : [];
+
+    // Compressed Stats
+    const totalCompressed = compressed.length;
+    const totalOldSize = compressed.reduce((sum, img) => sum + img.oldSize, 0);
+    const totalNewSize = compressed.reduce((sum, img) => sum + img.newSize, 0);
+    const totalSaved = totalOldSize - totalNewSize;
+    const percentSaved = (totalSaved / totalOldSize) * 100;
+
+    const dates = compressed.map(img => new Date(img.compressionDate)).sort((a, b) => a - b);
+    const firstCompression = dates[0]?.toISOString() ?? "N/A";
+    const lastCompression = dates[dates.length - 1]?.toISOString() ?? "N/A";
+
+    const biggestSave = compressed.reduce((max, img) => {
+        const saved = img.oldSize - img.newSize;
+        return saved > (max.oldSize - max.newSize) ? img : max;
+    }, compressed[0] || { imagePath: "N/A", oldSize: 0, newSize: 0 });
+
+    // Moved Stats
+    const totalMoved = moved.length;
+    const movedDates = moved.map(m => new Date(m.moveDate)).sort((a, b) => a - b);
+    const firstMove = movedDates[0]?.toISOString() ?? "N/A";
+    const lastMove = movedDates[movedDates.length - 1]?.toISOString() ?? "N/A";
+
+    // Log Stats
+    const startLines = logLines.filter(line => line.includes("Script Started"));
+    const endLines = logLines.filter(line => line.includes("Script finished"));
+
+    const runs = Math.min(startLines.length, endLines.length);
+    const durations = [];
+    let lastRunDuration = null;
+
+    for (let i = 0; i < runs; i++) {
+        const start = startLines[i].match(/\[(.*?)\]/)?.[1];
+        const end = endLines[i].match(/\[(.*?)\]/)?.[1];
+        if (start && end) {
+            const duration = getDurationMs(start, end);
+            durations.push(duration);
+            if (i === runs - 1) lastRunDuration = duration;
+        }
+    }
+
+
+    for (let i = 0; i < runs; i++) {
+        const start = startLines[i].match(/\[(.*?)\]/)?.[1];
+        const end = endLines[i].match(/\[(.*?)\]/)?.[1];
+        if (start && end) {
+            durations.push(getDurationMs(start, end));
+        }
+    }
+
+    const avgDuration = durations.reduce((sum, d) => sum + d, 0) / (durations.length || 1);
+    const last3Runs = startLines.slice(-3).map(line => formatDate(line.match(/\[(.*?)\]/)?.[1]));
+
+    // Final Report
+    console.log("📊 Obsidian Image Organizer Report");
+    console.log("----------------------------------");
+    console.log(`🗜️  Compressed Images: ${totalCompressed}`);
+    console.log(`📦  Original Size: ${formatBytes(totalOldSize)}`);
+    console.log(`📉  Compressed Size: ${formatBytes(totalNewSize)}`);
+    console.log(`💾  Space Saved: ${formatBytes(totalSaved)} (${percentSaved.toFixed(2)}%)`);
+    console.log(`🕐  First Compression: ${formatDate(firstCompression)}`);
+    console.log(`🕓  Last Compression:  ${formatDate(lastCompression)}`);
+    console.log("\n📁 Moved Images: ", totalMoved);
+    console.log(`🕐  First Move: ${formatDate(firstMove)}`);
+    console.log(`🕓  Last Move:  ${formatDate(lastMove)}`);
+
+    if (biggestSave?.imagePath && biggestSave.oldSize) {
+        const savedBytes = biggestSave.oldSize - biggestSave.newSize;
+        const percent = (savedBytes / biggestSave.oldSize) * 100;
+        console.log("\n🏆  Biggest Save:");
+        console.log(`    🔹 File: ${biggestSave.imagePath}`);
+        console.log(`    📦 Old Size: ${formatBytes(biggestSave.oldSize)}`);
+        console.log(`    📉 New Size: ${formatBytes(biggestSave.newSize)}`);
+        console.log(`    💾 Saved: ${formatBytes(savedBytes)} (${percent.toFixed(2)}%)`);
+    }
+
+    console.log("\n📘 Script Runs: ", runs);
+    if (lastRunDuration !== null) {
+        console.log(`⏲️  Last Run Duration: ${(lastRunDuration / 1000).toFixed(2)} sec`);
+    }
+    console.log(`⏱️  Average Duration: ${(avgDuration / 1000).toFixed(2)} sec`);
+    console.log(`🕓  Last 3 Runs: ${last3Runs.join(", ")}`);
+}
 
 
 
@@ -335,15 +469,20 @@ async function main() {
             }
             moveImagesForMarkdownFile(mdFile, vaultPath);
         });
+        log("Finished moving images")
     }
 
     if (compressImages) {
         log("Start compressing images");
-
-
         await startCompressImages();
-
+        log("Finished compressing images");
     }
+
+    if(printReport){
+        //This whole functionality is made by ChatGPT. I hope it doesn't break anything
+        generateReport(vaultPath)
+    }
+
     log("===== Script finished =====");
 
 }

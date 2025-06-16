@@ -93,6 +93,7 @@ node script.js [VAULT_PATH] [RUN_MODE] [OPTIONS]
 
 - `--move-images` – Move embedded images to `assets/` next to each note
 - `--compress-images` – Compress PNGs recursively (logs and skips already compressed ones)
+- `--print-report` – Generate and prints a report based on the contents of `.logs/` files.
 
 ### Optional Flags
 
@@ -126,6 +127,38 @@ ObsidianVault/.logs/
 - `obsidian-image-organizer-logs.log`: Human-readable log of everything done
 - `moved-images.json`: All image move actions with timestamp
 - `compressed-images.json`: All compression records with size change and hash
+
+You can print a report and get statistics of these file:
+
+```bash
+node script.js "/path/to/ObsidianVault" --print-report
+```
+
+```
+📊 Obsidian Image Organizer Report
+----------------------------------
+🗜️  Compressed Images: 2499
+📦  Original Size: 334.45 MB
+📉  Compressed Size: 89.38 MB
+💾  Space Saved: 245.08 MB (73.28%)
+🕐  First Compression: 2025-06-13 15:19:57
+🕓  Last Compression:  2025-06-15 21:00:03
+
+📁 Moved Images:  104
+🕐  First Move: 2025-06-13 15:19:56
+🕓  Last Move:  2025-06-15 21:00:02
+
+🏆  Biggest Save:
+    🔹 File: ***
+    📦 Old Size: 3.68 MB
+    📉 New Size: 813.10 KB
+    💾 Saved: 2.89 MB (78.44%)
+
+📘 Script Runs:  14
+⏲️  Last Run Duration: 0.03 sec
+⏱️  Average Duration: 27.74 sec
+🕓  Last 3 Runs: 2025-06-15 21:00:01, 2025-06-16 00:13:29, 2025-06-16 00:30:43
+```
 
 ---
 
