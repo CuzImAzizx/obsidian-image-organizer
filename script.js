@@ -459,7 +459,8 @@ validateVault();
 
 async function main() {
     if (moveImagesToAssets) {
-        log("Start moving images")
+        const start = performance.now();
+        log("Start moving images");
         const markdownFiles = findMarkdownFiles(vaultPath);
         log(`Found ${markdownFiles.length} markdown files.`);
 
@@ -469,13 +470,18 @@ async function main() {
             }
             moveImagesForMarkdownFile(mdFile, vaultPath);
         });
-        log("Finished moving images")
+        const end = performance.now();
+        const elapsed = Math.round(end - start);
+        log(`Finished moving images. Elapsed time: ${elapsed} ms`) //TODO: Make it so it display seconds or minuts, not only ms
     }
 
     if (compressImages) {
+        const start = performance.now();
         log("Start compressing images");
         await startCompressImages();
-        log("Finished compressing images");
+        const end = performance.now();
+        const elapsed = Math.round(end - start);
+        log(`Finished compressing images Elapsed time: ${elapsed} ms`); //TODO: Same thing above ^^
     }
 
     if(printReport){
