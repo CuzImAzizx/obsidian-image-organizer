@@ -280,6 +280,12 @@ async function startCompressImages() {
 
     const compressedHashes = new Set(compressedImagesList.map(img => img.compressedImageHash));// Very cool
 
+    const currentRunData = {
+        compressedImages: 0,
+        oldSize: 0,
+        newSize: 0,
+    }
+
     for (const filePath of pngFiles) {
         const hash = hashFile(filePath);
         if (compressedHashes.has(hash)) {
@@ -314,6 +320,10 @@ async function startCompressImages() {
             compressedImagesList.push(data);
             compressedHashes.add(data.compressedImageHash);
 
+            // Keep track of current run information
+            currentRunData.compressedImages++;
+            currentRunData.oldSize += data.oldSize;
+            currentRunData.newSize += data.newSize;
             log(`Compressed: ${filePath}`);
         } catch (err) {
             console.error(`Error compressing ${filePath}:`, err);
@@ -322,6 +332,7 @@ async function startCompressImages() {
 
     fs.writeFileSync(compressedJsonPath, JSON.stringify(compressedImagesList, null, 2));
     log(`Updated ${compressedJsonPath}`)
+    return currentRunData;
 }
 
 function formatBytes(bytes) {
@@ -478,15 +489,19 @@ async function main() {
     if (compressImages) {
         const start = performance.now();
         log("Start compressing images");
-        await startCompressImages();
+        const currentRunData = await startCompressImages();
         const end = performance.now();
         const elapsed = Math.round(end - start);
+        if(currentRunData && currentRunData.compressedImages > 0){
+            const savedBytes = formatBytes(currentRunData.oldSize - currentRunData.newSize);
+            log(`The script just compressed ${currentRunData.compressedImages} images and saved ${savedBytes} in space`);
+        }
         log(`Finished compressing images Elapsed time: ${elapsed} ms`); //TODO: Same thing above ^^
     }
 
     if(printReport){
         //This whole functionality is made by ChatGPT. I hope it doesn't break anything
-        generateReport(vaultPath)
+        generateReport(vaultPath);
     }
 
     log("===== Script finished =====");
