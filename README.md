@@ -100,6 +100,7 @@ node script.js [VAULT_PATH] [RUN_MODE] [OPTIONS]
 - `--skip-vault-checking` – Skip the check for `.obsidian/` folder
 - `--skip-not-found` – Ignore warnings about missing images
 - `--only-actions` – Only log actual actions (cleaner logs)
+- `--quality <number>` – Set PNG compression quality (0–100). Lower means higher compression. Default is 75.
 
 ---
 

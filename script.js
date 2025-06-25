@@ -22,33 +22,48 @@ let onlyActions = false;
 let moveImagesToAssets = false;
 let compressImages = false;
 let printReport = false;
+let compressionQuality = 75;
 
 // == Functions ==
 
 function setOptions(providedOptions) {
-    providedOptions.forEach(arg => {
-        if (arg.toLowerCase() == "--skip-vault-checking") {
+    // reject modernity embrace tradition
+    for(let i = 0; i < providedOptions.length; i++){
+        if (providedOptions[i].toLowerCase() == "--skip-vault-checking") {
             skipVaultChecking = true;
             log("Skipping vault checking");
-        } else if (arg.toLowerCase() == "--skip-not-found") {
+        } else if (providedOptions[i].toLowerCase() == "--skip-not-found") {
             skipNotFound = true;
             log("Ignoring not found images");
-        } else if (arg.toLowerCase() == "--only-actions") {
+        } else if (providedOptions[i].toLowerCase() == "--only-actions") {
             onlyActions = true;
             log("Logging only actions");
-        } else if (arg.toLowerCase() == "--move-images") {
+        } else if (providedOptions[i].toLowerCase() == "--move-images") {
             moveImagesToAssets = true;
-        } else if (arg.toLowerCase() == "--compress-images") {
+        } else if (providedOptions[i].toLowerCase() == "--compress-images") {
             compressImages = true;
-        } else if (arg.toLowerCase() == "--print-report"){
+        } else if (providedOptions[i].toLowerCase() == "--print-report"){
             printReport = true;
-        } else if (arg.startsWith("--")) {
+        } else if (providedOptions[i].toLowerCase() == "--quality"){
+            const compressionNumberArg = Number(providedOptions[i+1]);
+            if(isNaN(compressionNumberArg)){
+                log(`<${providedOptions[i+1]}> is not an integer\n\t"--quality <number>"\nWhere <number> is an integer and ranges from 0 and 100`);
+                log("===== Script exited 1 =====");
+                process.exit(1);
+            }
+            if(!(compressionNumberArg >= 0 && compressionNumberArg <= 100)){
+                log(`<${compressionNumberArg}> is not within range\n\t"--quality <number>"\nWhere <number> is an integer and ranges from 0 and 100`);
+                log("===== Script exited 1 =====");
+                process.exit(1);
+            }
+            compressionQuality = compressionNumberArg;
+        } else if (providedOptions[i].startsWith("--")) {
             //wtf, it's an option provided but it's something else?
-            log(`Error: Option "${arg}" unknown`);
+            log(`Error: Option "${providedOptions[i]}" unknown`);
             log("===== Script exited 1 =====");
             process.exit(1);
         }
-    })
+    }
 }
 
 function validateLogs() {
@@ -301,7 +316,7 @@ async function startCompressImages() {
 
             // 2. Compress
             await sharp(copyPath)
-                .png({ quality: 75, compressionLevel: 9 }) //TODO: Add options to control quality
+                .png({ quality: compressionQuality, compressionLevel: 9 })
                 .toFile(filePath);
 
             const compressionDate = new Date().toISOString();
